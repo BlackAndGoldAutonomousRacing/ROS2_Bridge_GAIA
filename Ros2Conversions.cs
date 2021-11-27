@@ -339,7 +339,7 @@ namespace Simulator.Bridge.Ros2
                 right_turn_signal_active = data.RightTurnSignal,
                 wipers_active = data.Wipers,
                 reverse_gear_active = data.InReverse,
-                selected_gear = (data.InReverse ? Gear.GEAR_REVERSE : Gear.GEAR_DRIVE),
+                selected_gear = (Gear)data.Gear,
                 engine_active = data.EngineOn,
                 engine_rpm = data.EngineRPM,
                 gps_latitude = data.Latitude,
