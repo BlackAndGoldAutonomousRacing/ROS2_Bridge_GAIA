@@ -56,6 +56,8 @@ namespace Simulator.Bridge.Ros2
 
         byte[] Buffer;
 
+        const int pointStep_ = 16;
+
         static readonly PointField[] PointFields = new[]
         {
             new PointField()
@@ -82,6 +84,14 @@ namespace Simulator.Bridge.Ros2
             new PointField()
             {
                 name = "intensity",
+                offset = 12,
+                datatype = PointField.FLOAT32,
+                count = 1,
+            },
+            /*
+            new PointField()
+            {
+                name = "intensity",
                 offset = 16,
                 datatype = PointField.UINT8,
                 count = 1,
@@ -93,6 +103,7 @@ namespace Simulator.Bridge.Ros2
                 datatype = PointField.FLOAT64,
                 count = 1,
             },
+            */
         };
 
         public Ros2PointCloudWriter(Ros2BridgeInstance instance, string topic)
@@ -104,7 +115,8 @@ namespace Simulator.Bridge.Ros2
         {
             if (Buffer == null || Buffer.Length != data.Points.Length)
             {
-                Buffer = new byte[32 * data.Points.Length];
+                // Buffer = new byte[32 * data.Points.Length];
+                Buffer = new byte[pointStep_ * data.Points.Length];
             }
 
             int count = 0;
@@ -122,12 +134,15 @@ namespace Simulator.Bridge.Ros2
                         }
 
                         var pos = new UnityEngine.Vector3(point.x, point.y, point.z);
-                        float intensity = point.w;
-
                         *(UnityEngine.Vector3*)(ptr + offset) = data.Transform.MultiplyPoint3x4(pos);
-                        *(ptr + offset + 16) = (byte)(intensity * 255);
+                        // float intensity = point.w;
+                        // *(ptr + offset + 16) = (byte)(intensity * 255);
 
-                        offset += 32;
+                        *(float*)*(ptr + offset + 12) = point.w;
+
+                        // offset += 32;
+                        offset += pointStep_;
+
                         count++;
                     }
                 }
@@ -144,12 +159,13 @@ namespace Simulator.Bridge.Ros2
                 width = (uint)count,
                 fields = PointFields,
                 is_bigendian = false,
-                point_step = 32,
-                row_step = (uint)count * 32,
+                // point_step = 32,
+                point_step = pointStep_,
+                row_step = (uint)count * pointStep_,
                 data = new PartialByteArray()
                 {
                     Array = Buffer,
-                    Length = count * 32,
+                    Length = count * pointStep_,
                 },
                 is_dense = true,
             };
