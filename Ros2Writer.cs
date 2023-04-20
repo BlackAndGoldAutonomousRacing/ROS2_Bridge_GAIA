@@ -56,7 +56,7 @@ namespace Simulator.Bridge.Ros2
 
         byte[] Buffer;
 
-        const int pointStep_ = 16;
+        const uint pointStep = 16;
 
         static readonly PointField[] PointFields = new[]
         {
@@ -113,10 +113,10 @@ namespace Simulator.Bridge.Ros2
 
         public void Write(PointCloudData data, Action completed)
         {
-            if (Buffer == null || Buffer.Length != data.Points.Length)
+            if (Buffer == null || Buffer.Length != pointStep * data.Points.Length)
             {
                 // Buffer = new byte[32 * data.Points.Length];
-                Buffer = new byte[pointStep_ * data.Points.Length];
+                Buffer = new byte[pointStep * data.Points.Length];
             }
 
             int count = 0;
@@ -135,13 +135,12 @@ namespace Simulator.Bridge.Ros2
 
                         var pos = new UnityEngine.Vector3(point.x, point.y, point.z);
                         *(UnityEngine.Vector3*)(ptr + offset) = data.Transform.MultiplyPoint3x4(pos);
-                        // float intensity = point.w;
+                        float intensity = point.w;
                         // *(ptr + offset + 16) = (byte)(intensity * 255);
-
-                        *(float*)*(ptr + offset + 12) = point.w;
+                        *(float*)(ptr + offset + 12) = intensity;
 
                         // offset += 32;
-                        offset += pointStep_;
+                        offset += (int)pointStep;
 
                         count++;
                     }
@@ -160,12 +159,12 @@ namespace Simulator.Bridge.Ros2
                 fields = PointFields,
                 is_bigendian = false,
                 // point_step = 32,
-                point_step = pointStep_,
-                row_step = (uint)count * pointStep_,
+                point_step = pointStep,
+                row_step = (uint)count * pointStep,
                 data = new PartialByteArray()
                 {
                     Array = Buffer,
-                    Length = count * pointStep_,
+                    Length = count * (int)pointStep,
                 },
                 is_dense = true,
             };
